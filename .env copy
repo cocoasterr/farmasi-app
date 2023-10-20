@@ -1,0 +1,4 @@
+host =
+port = 
+db_name = 
+DB_PG_URL = postgresql+psycopg2://postgres:password@${host}:${port}/${db_name}
