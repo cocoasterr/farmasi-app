@@ -1,46 +1,43 @@
-from fastapi import FastAPI, Depends, HTTPException, APIRouter
+from fastapi import APIRouter, status, Depends, Request, Query
+from app.schemas.drugSchemas import DrugBaseSchema, DrugUpdateSchema
 from sqlalchemy.orm import Session
-from models.drugs import Drugs
-from schemas.drugSchemas import DrugBaseSchema, DrugUpdateSchema
-from database import get_db
-from repository.drugRepo import create, index, read, update, delete
+from app.database import get_db
+from app.models.drugs import Drugs
+from app.repository.drugRepo import drugRepo
+from app.serializers.drugSerializers import drugEntity, drugListEntity
+from app.service.generalService import general_index, general_get_by_id, general_delete, general_update, general_create
+
 
 router = APIRouter()
-app = FastAPI()
-
-@app.post("/create")
-def create_drug(payload: DrugBaseSchema, db: Session = Depends(get_db)):
-    return create(db, payload)
-
-@app.get("/{drug_id}")
-def read_drug(drug_id: int, db: Session = Depends(get_db)):
-    obat = read(db, drug_id)
-    if obat is None:
-        raise HTTPException(status_code=404, detail="Obat not found")
-    return obat
-
-@app.get("/")
-def read_drug(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    obats = index(db, skip, limit)
-    return obats
-
-@app.put("/{drug_id}")
-def update_drug(drug_id: int, payload: DrugUpdateSchema, db: Session = Depends(get_db)):
-    obat = update(db, drug_id, payload)
-    if obat is None:
-        raise HTTPException(status_code=404, detail="Obat not found")
-    return obat
-
-@app.delete("/{drug_id}")
-def delete_drug(drug_id: int, db: Session = Depends(get_db)):
-    obat = read(db, drug_id)
-    if obat is None:
-        raise HTTPException(status_code=404, detail="Obat not found")
-    delete(db, drug_id)
-    return obat
 
 
+@router.post('/create', status_code=status.HTTP_201_CREATED)
+async def create_content(payloads: list[DrugBaseSchema],
+                  session: Session = Depends(get_db)):
+    return await general_create(Drugs, drugRepo, session, payloads)
 
 
+@router.get('/')
+async def index_content(request: Request,
+
+                             page: int = Query(default=1, gt=0),
+                             limit: int = Query(default=10, gt=0),
+                             session: Session = Depends(get_db)) -> dict:
+    return await general_index(Drugs, drugRepo, drugListEntity, page, limit)
 
 
+@router.get('/{id}')
+async def read_content(id: str,
+                   session: Session = Depends(get_db)) -> dict:
+    return await general_get_by_id(id, Drugs, drugRepo, drugEntity)
+
+
+@router.delete('/{id}', status_code=status.HTTP_200_OK)
+async def delete_content(id: str,
+                     session: Session = Depends(get_db)) -> dict:
+    return await general_delete(id, drugRepo, drugRepo)
+    
+@router.put('/{id}')
+async def update_content(id: str, payload: DrugUpdateSchema,
+                     session: Session = Depends(get_db)):
+    return await general_update(id, Drugs, session, payload)

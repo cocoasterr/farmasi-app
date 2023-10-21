@@ -4,18 +4,19 @@ from enum import Enum
 
 
 class DrugBaseSchema(BaseModel):
-    id: Optional[str]
+    id: Optional[str] = ""
     name: Optional[str]
     stock: Optional[int]
-    created_at: Optional[int]
-    updated_at: Optional[int]
+    receipt: Optional[str]
+    created_at: Optional[int] = ""
+    updated_at: Optional[int] = ""
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "obat 1",
                 "stock": 100,
+                "receipt": "paracetamol, vit c, panadol",
             }
         }
 
@@ -25,13 +26,13 @@ class DrugResponseSchema(DrugBaseSchema):
         return BaseModel.dict(self, *args, **kwargs)
 
 
-class DrugUpdateSchema(BaseModel):
+class DrugUpdateSchema(DrugBaseSchema):
     class Config:
-        orm_mode = True
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "update obat 1",
                 "stock": 200,
+                "receipt": "update paracetamol, vit c, panadol",
             }
         }
 
